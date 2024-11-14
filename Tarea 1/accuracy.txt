@@ -568,3 +568,28 @@ Mejores parámetros sin PCA:
 {'svm__C': 1, 'svm__gamma': 0.000625, 'svm__kernel': 'rbf', 'svm__shrinking': True, 'svm__tol': 0.001}
 Mejor precisión sin PCA (validación cruzada): 0.6269
 Accuracy en conjunto de prueba sin PCA: 0.6500
+[CV] Parámetros: {'svm__C': 0.5, 'svm__gamma': 0.000625, 'svm__kernel': 'sigmoid', 'svm__shrinking': True, 'svm__tol': 0.001}; Tiempo total: 72.14 min; Accuracy promedio: 0.5083 (+/- 0.0062)
+[CV] Parámetros: {'svm__C': 0.5, 'svm__gamma': 1, 'svm__kernel': 'sigmoid', 'svm__shrinking': True, 'svm__tol': 0.001}; Tiempo total: 75.64 min; Accuracy promedio: 0.5068 (+/- 0.0068)
+[CV] Parámetros: {'svm__C': 0.5, 'svm__gamma': 0.06, 'svm__kernel': 'sigmoid', 'svm__shrinking': True, 'svm__tol': 0.001}; Tiempo total: 71.61 min; Accuracy promedio: 0.4992 (+/- 0.0084)
+[CV] Parámetros: {'svm__C': 0.5, 'svm__gamma': 5, 'svm__kernel': 'sigmoid', 'svm__shrinking': True, 'svm__tol': 0.001}; Tiempo total: 79.44 min; Accuracy promedio: 0.5082 (+/- 0.0069)
+[CV] Parámetros: {'svm__C': 0.5, 'svm__gamma': 10, 'svm__kernel': 'sigmoid', 'svm__shrinking': True, 'svm__tol': 0.001}; Tiempo total: 79.63 min; Accuracy promedio: 0.5082 (+/- 0.0069)
+[CV] Parámetros: {'svm__C': 1, 'svm__gamma': 0.000625, 'svm__kernel': 'sigmoid', 'svm__shrinking': True, 'svm__tol': 0.001}; Tiempo total: 70.00 min; Accuracy promedio: 0.5069 (+/- 0.0058)
+[CV] Parámetros: {'svm__C': 1, 'svm__gamma': 1, 'svm__kernel': 'sigmoid', 'svm__shrinking': True, 'svm__tol': 0.001}; Tiempo total: 74.12 min; Accuracy promedio: 0.5072 (+/- 0.0070)
+[CV] Parámetros: {'svm__C': 1, 'svm__gamma': 0.06, 'svm__kernel': 'sigmoid', 'svm__shrinking': True, 'svm__tol': 0.001}; Tiempo total: 70.92 min; Accuracy promedio: 0.5003 (+/- 0.0080)
+[CV] Parámetros: {'svm__C': 1, 'svm__gamma': 5, 'svm__kernel': 'sigmoid', 'svm__shrinking': True, 'svm__tol': 0.001}; Tiempo total: 80.18 min; Accuracy promedio: 0.5087 (+/- 0.0072)
+[CV] Parámetros: {'svm__C': 1, 'svm__gamma': 10, 'svm__kernel': 'sigmoid', 'svm__shrinking': True, 'svm__tol': 0.001}; Tiempo total: 80.62 min; Accuracy promedio: 0.5088 (+/- 0.0070)
+[CV] Parámetros: {'svm__C': 5, 'svm__gamma': 0.000625, 'svm__kernel': 'sigmoid', 'svm__shrinking': True, 'svm__tol': 0.001}; Tiempo total: 72.74 min; Accuracy promedio: 0.5107 (+/- 0.0066)
+[CV] Parámetros: {'svm__C': 5, 'svm__gamma': 1, 'svm__kernel': 'sigmoid', 'svm__shrinking': True, 'svm__tol': 0.001}; Tiempo total: 73.81 min; Accuracy promedio: 0.5072 (+/- 0.0066)
+[CV] Parámetros: {'svm__C': 5, 'svm__gamma': 0.06, 'svm__kernel': 'sigmoid', 'svm__shrinking': True, 'svm__tol': 0.001}; Tiempo total: 72.53 min; Accuracy promedio: 0.5002 (+/- 0.0078)
+[CV] Parámetros: {'svm__C': 5, 'svm__gamma': 5, 'svm__kernel': 'sigmoid', 'svm__shrinking': True, 'svm__tol': 0.001}; Tiempo total: 81.18 min; Accuracy promedio: 0.5081 (+/- 0.0069)
+[CV] Parámetros: {'svm__C': 5, 'svm__gamma': 10, 'svm__kernel': 'sigmoid', 'svm__shrinking': True, 'svm__tol': 0.001}; Tiempo total: 79.42 min; Accuracy promedio: 0.5086 (+/- 0.0071)
+[CV] Parámetros: {'svm__C': 10, 'svm__gamma': 0.000625, 'svm__kernel': 'sigmoid', 'svm__shrinking': True, 'svm__tol': 0.001}; Tiempo total: 70.05 min; Accuracy promedio: 0.5074 (+/- 0.0067)
+[CV] Parámetros: {'svm__C': 10, 'svm__gamma': 1, 'svm__kernel': 'sigmoid', 'svm__shrinking': True, 'svm__tol': 0.001}; Tiempo total: 71.74 min; Accuracy promedio: 0.5079 (+/- 0.0075)
+[CV] Parámetros: {'svm__C': 10, 'svm__gamma': 0.06, 'svm__kernel': 'sigmoid', 'svm__shrinking': True, 'svm__tol': 0.001}; Tiempo total: 69.59 min; Accuracy promedio: 0.5003 (+/- 0.0079)
+[CV] Parámetros: {'svm__C': 10, 'svm__gamma': 5, 'svm__kernel': 'sigmoid', 'svm__shrinking': True, 'svm__tol': 0.001}; Tiempo total: 74.22 min; Accuracy promedio: 0.5082 (+/- 0.0071)
+[CV] Parámetros: {'svm__C': 10, 'svm__gamma': 10, 'svm__kernel': 'sigmoid', 'svm__shrinking': True, 'svm__tol': 0.001}; Tiempo total: 56.45 min; Accuracy promedio: 0.5084 (+/- 0.0075)
+
+Mejores parámetros sin PCA:
+{'svm__C': 5, 'svm__gamma': 0.000625, 'svm__kernel': 'sigmoid', 'svm__shrinking': True, 'svm__tol': 0.001}
+Mejor precisión sin PCA (validación cruzada): 0.5107
+Accuracy en conjunto de prueba sin PCA: 0.4869

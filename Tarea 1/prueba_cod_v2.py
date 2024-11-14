@@ -46,7 +46,7 @@ def cargar_imagenes(ruta, tamanyo=(64, 64)):
 # Cargar los datos de entrenamiento y prueba
 imagenes_entrenamiento, etiquetas_entrenamiento = cargar_imagenes(ruta_entrenamiento)
 imagenes_prueba, etiquetas_prueba = cargar_imagenes(ruta_prueba)
-'''
+
 # ==============================
 # EXPERIMENTO 1: OPTIMIZACIÓN DEL MODELO SVM SIN PCA
 # ==============================
@@ -67,10 +67,10 @@ parametros_sin_pca = {
     #'svm__gamma': [0.0006, 0.00065, 0.0007, 0.00075],
     #'svm__C': [0.95, 1, 1.02, 1.05],
     #'svm__gamma': [0.0006, 0.00062, 0.000625, 0.00063, 0.00065],
-    'svm__C': [1],
+    'svm__C': [0.5, 1, 5, 10],
     #'svm__gamma': [0.0006, 0.00062, 0.000625, 0.0006251, 0.0006252, 0.0006253, 0.0006254, 0.0006255, 0.0006256, 0.0006257, 0.0006258, 0.0006259, 0.000626],
-    'svm__gamma': [0.000625, 0.0006251],
-    'svm__kernel': ['rbf', 'linear'],
+    'svm__gamma': [0.000625, 1, 0.06, 5, 10],
+    'svm__kernel': ['sigmoid'],
     'svm__tol': [1e-3],
     'svm__shrinking': [True]
 }
@@ -232,7 +232,7 @@ with open(file_path, "a", encoding="utf-8") as file:  # Abre en modo adjunto (ag
     
 print("Experimento 2 completado, archivo 'exp2.txt' listo")
 
-'''
+
 # ==============================
 # RESULTADOS Y GRÁFICAS
 # ==============================
