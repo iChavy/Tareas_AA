@@ -9,6 +9,8 @@ from tensorflow.keras.utils import to_categorical
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
+
+
 # Configurar semilla para reproducibilidad
 np.random.seed(42)
 tf.random.set_seed(42)
@@ -156,6 +158,33 @@ def entrenar_y_evaluar_modelos(modelos, x_train, y_train, x_test, y_test):
 
     return resultados
 
+def entrenar_y_evaluar_modelos(modelos, x_train, y_train, x_test, y_test, exp_label):
+    resultados = []
+    for i, modelo in enumerate(modelos):
+        print(f"Entrenando Modelo {exp_label} MLP{i + 1}...")
+        acc_totales = []
+        acc_clases = []
+        matrices_conf = []
+
+        for r in range(5):
+            print(f"  Repetición {r + 1}...")
+            reinicializar_pesos(modelo)
+            modelo.fit(x_train, y_train, epochs=5, batch_size=32, verbose=0)
+
+            predicciones = np.argmax(modelo.predict(x_test), axis=1)
+            acc_total = accuracy_score(np.argmax(y_test, axis=1), predicciones)
+            matriz_conf = confusion_matrix(np.argmax(y_test, axis=1), predicciones)
+            acc_clase = matriz_conf.diagonal() / matriz_conf.sum(axis=1)
+
+            acc_totales.append(acc_total)
+            acc_clases.append(acc_clase)
+            matrices_conf.append(matriz_conf)
+
+        mediana_acc = np.median(acc_totales)
+        resultados.append((mediana_acc, acc_clases[-1], matrices_conf[-1], acc_totales[-1]))
+
+    return resultados
+
 #### RESULTADOS ####
 resultados = entrenar_y_evaluar_modelos([MLP1, MLP2, MLP3], x_train_digits, y_train_digits_one_hot, x_test_digits, y_test_digits_one_hot)
 
@@ -173,3 +202,5 @@ for i, (mediana, acc_clase, matriz_conf, acc_total) in enumerate(resultados):
     plt.xlabel("Clases")
     plt.ylabel("Accuracy")
     plt.show()
+
+    
