@@ -14,33 +14,70 @@ np.random.seed(42)
 tf.random.set_seed(42)
 
 # Función para cargar datos EMNIST desde archivos comprimidos
-def cargar_datos(ruta_imagenes, ruta_etiquetas, num_imagenes):
-    with gzip.open(ruta_imagenes, "rb") as f:
-        imagenes = np.frombuffer(f.read(), dtype=np.uint8, offset=16).reshape(num_imagenes, 28, 28)
-    with gzip.open(ruta_etiquetas, "rb") as f:
-        etiquetas = np.frombuffer(f.read(), dtype=np.uint8, offset=8)
-    return imagenes / 255.0, etiquetas
+def cargar_datos(ruta_imagenes, ruta_etiquetas):
+    with gzip.open(ruta_imagenes, 'rb') as archivo:
+        archivo.read(4)  # Número mágico
+        cantidad_imagenes = int.from_bytes(archivo.read(4), 'big')
+        filas = int.from_bytes(archivo.read(4), 'big')
+        columnas = int.from_bytes(archivo.read(4), 'big')
+        tamano_imagen = filas * columnas
+        imagenes = np.frombuffer(archivo.read(), dtype=np.uint8).reshape(cantidad_imagenes, tamano_imagen)
+
+    with gzip.open(ruta_etiquetas, 'rb') as archivo:
+        archivo.read(4)  # Número mágico
+        cantidad_etiquetas = int.from_bytes(archivo.read(4), 'big')
+        etiquetas = np.frombuffer(archivo.read(), dtype=np.uint8)
+
+    return imagenes/255.0, etiquetas
 
 # Función para cargar mapping de etiquetas (adaptada para tres columnas)
-def cargar_mapping(ruta_mapping):
+def cargar_mapping(ruta_archivo, dataset="digits"):
     mapping = {}
-    with open(ruta_mapping, "r") as f:
-        for line in f:
-            valores = line.split()
-            if len(valores) >= 2:  # Verificar que hay al menos dos columnas
-                try:
-                    original = int(valores[0])
-                    mapped = int(valores[1])  # Ignoramos la tercera columna
-                    mapping[original] = chr(mapped)  # Convertimos la etiqueta a carácter
-                except ValueError:
-                    continue  # Omitir líneas con valores no válidos
+    with open(ruta_archivo, 'r') as archivo:
+        for linea in archivo:
+            partes = linea.strip().split()
+            if dataset == "letters":
+                clave, valor_upper, valor_lower = map(int, partes)
+                mapping[clave] = (valor_upper, valor_lower)
+            else:  # Para "digits"
+                clave, valor = map(int, partes)
+                mapping[clave] = valor
     return mapping
+
+def mostrar_imagenes_aleatorias(imagenes, etiquetas, mapping, cantidad=20, titulo="Imágenes"):
+    """
+    Muestra una cantidad dada de imágenes aleatorias junto con sus etiquetas usando el mapping.
+    Incluye tanto letras mayúsculas como minúsculas si el mapping contiene tuplas.
+    """
+    indices = random.sample(range(imagenes.shape[0]), cantidad)
+    imagenes_seleccionadas = imagenes[indices]
+    etiquetas_seleccionadas = etiquetas[indices]
+
+    filas = int(np.sqrt(cantidad))
+    columnas = int(np.ceil(cantidad / filas))
+
+    plt.figure(figsize=(10, 10))
+    plt.suptitle(titulo, fontsize=16)
+    for i, (imagen, etiqueta) in enumerate(zip(imagenes_seleccionadas, etiquetas_seleccionadas)):
+        plt.subplot(filas, columnas, i + 1)
+        if etiqueta in mapping:
+            if isinstance(mapping[etiqueta], tuple):  # Dataset "letters"
+                etiqueta_mapeada = f"{chr(mapping[etiqueta][0])}/{chr(mapping[etiqueta][1])}"  # Uppercase/Lowercase
+            else:  # Dataset "digits"
+                etiqueta_mapeada = chr(mapping[etiqueta])
+        else:
+            etiqueta_mapeada = etiqueta
+        plt.imshow(imagen.reshape(28, 28), cmap='gray')
+        plt.title(f"{etiqueta_mapeada}")
+        plt.axis('off')
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.show()
 
 
 # Función para crear modelos MLP
 def crear_modelo(capas_ocultas, activacion, loss, optimizador, entradas, salidas):
     modelo = Sequential()
-    modelo.add(Flatten(input_shape=entradas))
+    modelo.add(Input(shape=entradas))  # Usar Input en lugar de input_shape en Flatten
     for capa in capas_ocultas:
         modelo.add(Dense(capa, activation=activacion))
     modelo.add(Dense(salidas, activation="softmax"))
@@ -54,24 +91,11 @@ def reinicializar_pesos(modelo):
             layer.kernel.assign(layer.kernel_initializer(layer.kernel.shape))
         if hasattr(layer, 'bias_initializer') and layer.bias is not None:
             layer.bias.assign(layer.bias_initializer(layer.bias.shape))
-
-# Función para mostrar imágenes
-def mostrar_imagenes(imagenes, etiquetas, mapping, titulo, num_mostrar=20):
-    fig, axes = plt.subplots(4, 5, figsize=(10, 8))
-    fig.suptitle(titulo)
-    for i, ax in enumerate(axes.flat):
-        idx = np.random.randint(0, len(imagenes))
-        ax.imshow(imagenes[idx], cmap='gray')
-        ax.axis('off')
-        etiqueta = etiquetas[idx]
-        ax.set_title(f"Clase: {mapping[etiqueta] if etiqueta in mapping else etiqueta}")
-    plt.tight_layout()
-    plt.show()
-
-def entrenar_y_evaluar_modelos(modelos, x_train, y_train, x_test, y_test, exp_label):
+            
+def entrenar_y_evaluar_modelos(modelos, x_train, y_train, x_test, y_test):
     resultados = []
     for i, modelo in enumerate(modelos):
-        print(f"Entrenando Modelo {exp_label} MLP{i + 1}...")
+        print(f"Entrenando Modelo MLP{i + 1}...")
         acc_totales = []
         acc_clases = []
         matrices_conf = []
@@ -79,7 +103,7 @@ def entrenar_y_evaluar_modelos(modelos, x_train, y_train, x_test, y_test, exp_la
         for r in range(5):
             print(f"  Repetición {r + 1}...")
             reinicializar_pesos(modelo)
-            modelo.fit(x_train, y_train, epochs=5, batch_size=32, verbose=0)
+            modelo.fit(x_train, y_train, epochs=20, batch_size=32, verbose=0)
 
             predicciones = np.argmax(modelo.predict(x_test), axis=1)
             acc_total = accuracy_score(np.argmax(y_test, axis=1), predicciones)
@@ -93,6 +117,7 @@ def entrenar_y_evaluar_modelos(modelos, x_train, y_train, x_test, y_test, exp_la
         mediana_acc = np.median(acc_totales)
         resultados.append((mediana_acc, acc_clases[-1], matrices_conf[-1], acc_totales[-1]))
 
+    return resultados
     return resultados
 
 '''
@@ -137,9 +162,78 @@ for i, (mediana, acc_clase, matriz_conf, acc_total) in enumerate(resultados_exp1
     print(f"Accuracy por Clase: {acc_clase}")
     print(f"Matriz de Confusión:\n{matriz_conf}")
 '''
+ruta_digits = "./emnist-digits"
+# Concatena la ruta de los archivos con la carpeta de los dígitos con os
+ruta_entrenamiento_imagenes = os.path.join(ruta_digits, "emnist-digits-train-images-idx3-ubyte.gz")
+ruta_entrenamiento_etiquetas = os.path.join(ruta_digits, "emnist-digits-train-labels-idx1-ubyte.gz")
+ruta_prueba_imagenes = os.path.join(ruta_digits, "emnist-digits-test-images-idx3-ubyte.gz")
+ruta_prueba_etiquetas = os.path.join(ruta_digits, "emnist-digits-test-labels-idx1-ubyte.gz")
+ruta_mapping = os.path.join(ruta_digits, "emnist-digits-mapping.txt")
+
+x_entrenamiento, y_entrenamiento = cargar_datos(ruta_entrenamiento_imagenes, ruta_entrenamiento_etiquetas)
+x_prueba, y_prueba = cargar_datos(ruta_prueba_imagenes, ruta_prueba_etiquetas)
+
+mapping = cargar_mapping(ruta_mapping, "digits")
+
+shape_entrada = (x_entrenamiento.shape[1], )
+numero_clases = len(np.unique(y_entrenamiento))
+
+y_entrenamiento_categorico = to_categorical(y_entrenamiento, num_classes=numero_clases)
+y_prueba_categorico = to_categorical(y_prueba, num_classes=numero_clases)
+
+parametros_mlp1_exp1 = {'capas_ocultas': [256, 128], 'activacion': 'relu', 'loss': 'categorical_crossentropy'}
+parametros_mlp2_exp1 = {'capas_ocultas': [256, 128, 64], 'activacion': 'swish', 'loss': 'categorical_crossentropy'}
+parametros_mlp3_exp1 = {'capas_ocultas': [512, 256, 128], 'activacion': 'relu', 'loss': 'categorical_crossentropy'}
+
+MLP1_exp1 = crear_modelo(
+    capas_ocultas=parametros_mlp1_exp1['capas_ocultas'],
+    activacion=parametros_mlp1_exp1['activacion'],
+    loss=parametros_mlp1_exp1['loss'],
+    optimizador=Nadam(learning_rate=0.0002),
+    entradas=shape_entrada,
+    salidas=numero_clases
+)
+
+MLP2_exp1 = crear_modelo(
+    capas_ocultas=parametros_mlp2_exp1['capas_ocultas'],
+    activacion=parametros_mlp2_exp1['activacion'],
+    loss=parametros_mlp2_exp1['loss'],
+    optimizador=AdamW(learning_rate=0.00015),
+    entradas=shape_entrada,
+    salidas=numero_clases
+)
+
+MLP3_exp1 = crear_modelo(
+    capas_ocultas=parametros_mlp3_exp1['capas_ocultas'],
+    activacion=parametros_mlp3_exp1['activacion'],
+    loss=parametros_mlp3_exp1['loss'],
+    optimizador=Adam(learning_rate=0.0002),
+    entradas=shape_entrada,
+    salidas=numero_clases
+)
+resultados = entrenar_y_evaluar_modelos([MLP1_exp1, MLP2_exp1, MLP3_exp1], x_entrenamiento, y_entrenamiento_categorico, x_prueba, y_prueba_categorico)
+
+median_diggits = []
+for i, (mediana_acc, acc_clase, matriz_conf, acc_totales) in enumerate(resultados):
+    print(f"\nModelo MLP{i + 1}:")
+    print(f"Mediana 5 iteraciones: {mediana_acc:.4f}")
+    print(f"Accuracy por clase: {acc_clase}")
+
+    plt.figure(figsize=(10, 5))
+    plt.bar(range(len(acc_clase)), acc_clase)
+    plt.xlabel("Clases")
+    plt.ylabel("Accuracy")
+    plt.title(f"Accuracy por clase para MLP{i + 1}")
+    plt.show()
+
+    print(f"Accuracy total del modelo: {acc_totales}")
+    print(f"Matriz de confusión:\n{matriz_conf}")
+    median_diggits.append(mediana_acc)
+
+print(f"\nMediana Diggits: {np.median(median_diggits):.4f}")
 
 ##########EXPERIMENTO 2#############
-
+'''
 # Cargar datos de EMNIST Letters
 ruta_letras = "./emnist-letters"
 x_train_letras, y_train_letras = cargar_datos(
@@ -211,3 +305,72 @@ for i, (mediana, acc_clase, matriz_conf, acc_total) in enumerate(resultados_exp2
     print(f"Accuracy Total: {acc_total:.4f}")
     print(f"Accuracy por Clase: {acc_clase}")
     print(f"Matriz de Confusión:\n{matriz_conf}")
+'''
+
+ruta_letters = "./emnist-letters"
+# Concatena la ruta de los archivos con la carpeta de las letras con os
+ruta_entrenamiento_imagenes = os.path.join(ruta_letters, "emnist-letters-train-images-idx3-ubyte.gz")
+ruta_entrenamiento_etiquetas = os.path.join(ruta_letters, "emnist-letters-train-labels-idx1-ubyte.gz")
+ruta_prueba_imagenes = os.path.join(ruta_letters, "emnist-letters-test-images-idx3-ubyte.gz")
+ruta_prueba_etiquetas = os.path.join(ruta_letters, "emnist-letters-test-labels-idx1-ubyte.gz")
+ruta_mapping = os.path.join(ruta_letters, "emnist-letters-mapping.txt")
+
+x_entrenamiento, y_entrenamiento = cargar_datos(ruta_entrenamiento_imagenes, ruta_entrenamiento_etiquetas)
+x_prueba, y_prueba = cargar_datos(ruta_prueba_imagenes, ruta_prueba_etiquetas)
+
+mapping = cargar_mapping(ruta_mapping, "letters")
+
+shape_entrada = (x_entrenamiento.shape[1], )
+numero_clases = len(np.unique(y_entrenamiento))
+
+y_entrenamiento = y_entrenamiento - 1
+y_prueba = y_prueba - 1
+
+y_entrenamiento_categorico = to_categorical(y_entrenamiento, num_classes=numero_clases)
+y_prueba_categorico = to_categorical(y_prueba, num_classes=numero_clases)
+
+parametros_mlp1_exp2 = {'capas_ocultas': [16], 'activacion': 'relu', 'loss': 'categorical_crossentropy'}
+parametros_mlp2_exp2 = {'capas_ocultas': [16], 'activacion': 'relu', 'loss': 'categorical_crossentropy'}
+parametros_mlp3_exp2 = {'capas_ocultas': [16], 'activacion': 'swish', 'loss': 'categorical_crossentropy'}
+
+MLP1_exp2 = crear_modelo(capas_ocultas=parametros_mlp1_exp2['capas_ocultas'], 
+                         activacion=parametros_mlp1_exp2['activacion'], 
+                         loss=parametros_mlp1_exp2['loss'], 
+                         optimizador=Adam(learning_rate=0.0002), 
+                         entradas=shape_entrada, 
+                         salidas=numero_clases)
+
+MLP2_exp2 = crear_modelo(capas_ocultas=parametros_mlp2_exp2['capas_ocultas'], 
+                         activacion=parametros_mlp2_exp2['activacion'], 
+                         loss=parametros_mlp2_exp2['loss'], 
+                         optimizador=Adam(learning_rate=0.0003), 
+                         entradas=shape_entrada, 
+                         salidas=numero_clases)
+
+MLP3_exp2 = crear_modelo(capas_ocultas=parametros_mlp3_exp2['capas_ocultas'], 
+                         activacion=parametros_mlp3_exp2['activacion'], 
+                         loss=parametros_mlp3_exp2['loss'], 
+                         optimizador=Nadam(learning_rate=0.0002), 
+                         entradas=shape_entrada, 
+                         salidas=numero_clases)
+
+entrenar_y_evaluar_modelos([MLP1_exp2, MLP2_exp2, MLP3_exp2], x_entrenamiento, y_entrenamiento_categorico, x_prueba, y_prueba_categorico)
+
+median_diggits = []
+for i, (mediana_acc, acc_clase, matriz_conf, acc_totales) in enumerate(resultados):
+    print(f"\nModelo MLP{i + 1}:")
+    print(f"Mediana 5 iteraciones: {mediana_acc:.4f}")
+    print(f"Accuracy por clase: {acc_clase}")
+
+    plt.figure(figsize=(10, 5))
+    plt.bar(range(len(acc_clase)), acc_clase)
+    plt.xlabel("Clases")
+    plt.ylabel("Accuracy")
+    plt.title(f"Accuracy por clase para MLP{i + 1}")
+    plt.show()
+
+    print(f"Accuracy total del modelo: {acc_totales}")
+    print(f"Matriz de confusión:\n{matriz_conf}")
+    median_diggits.append(mediana_acc)
+
+print(f"\nMediana Letters: {np.median(median_diggits):.4f}")
